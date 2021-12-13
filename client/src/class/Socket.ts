@@ -34,7 +34,12 @@ export class SocketService {
       callback(data);
     });
   }
-
+  
+  public onRedirect( callback: () => void) {
+    this.socket.on("redirect", () => {
+      callback();
+    });
+  }
   public emitLogin(payload: Object) {
     this.socket.emit("login", payload);
   }

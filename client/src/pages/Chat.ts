@@ -4,13 +4,17 @@ import { toastInfo } from "../components/Toast";
 import { redirect } from '../utils/redirect';
 
 
-export const Chat = (app: any) => {
+export const Chat = async(app: any) => {
   const params = parselocationSearch(window.location.search);
-
+  let cont  =0
   SocketMain.onMessage((data: any) => {
+    cont++;
+    console.log(data,cont++);
+    
     const div = document.createElement("div");
-      div.classList.add("messagesInput");
-      params.get("username") === data.name
+      div.classList.add("messagesfinal");
+
+      params.get("username") === data.user
         ? (div.innerHTML = Message(data))
         : (div.innerHTML = MessageOther(data));
 
@@ -18,6 +22,7 @@ export const Chat = (app: any) => {
         .querySelector<HTMLDivElement>("#messagesInput")!
         .appendChild(div);
   });
+
   SocketMain.onNotification((data: any)=>{
     console.log("Emit notification", data);
       
@@ -25,8 +30,7 @@ export const Chat = (app: any) => {
       div.innerHTML = toastInfo({...data})
 
       document
-        .querySelector<HTMLDivElement>("#notification")!
-        .appendChild(div);
+        .querySelector<HTMLDivElement>("#notification")?.appendChild(div);
       
       setTimeout(() => {
         div.remove();
@@ -55,7 +59,7 @@ export const Chat = (app: any) => {
         <div class="rounded-full h-2 w-2 bg-green-300 mx-4"></div>
       </div>
     </div>
-      <div id="messagesInput" class="bg-blue-50 p-4 w-128 h-128	"></div>
+      <div id="messagesInput" class="bg-blue-50 p-4 w-128 h-128	overflow-auto"></div>
         <div class="p-4">
             <input
                 type="text"
@@ -76,8 +80,8 @@ export const Chat = (app: any) => {
   
       SocketMain.emitGetMessages({
         message: message,
-        username: parselocationSearch(window.location.search).get("username"),
-        room: parselocationSearch(window.location.search).get("room")
+        username: params.get("username"),
+        room: params.get("room")
       });
     }
   }
@@ -86,12 +90,14 @@ export const Chat = (app: any) => {
 
   btnback.onclick = () => {
     SocketMain.emitLogout();
-    const a = `/`;
-    window.history.pushState(null, "Home", a);
-    redirect();
-  }
-};
+    window.history.back();
+    redirect("/" , "");
+ }
 
+
+
+
+};
 function parselocationSearch(search: string) {
   const params = new URLSearchParams(search);
   return params;

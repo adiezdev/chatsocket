@@ -14,11 +14,13 @@ export class Socket {
 
     this.io = new socketIO.Server(server);
     this.io.on("connection", (socket: socketIO.Socket) => {
-      console.log(`Conexion ${socket.id} abierta ${socket}`);
+      console.log(`Conexion ${socket.id} abierta`);
 
       this.onLogin(socket);
       this.onGetMessages(socket);
       this.logout(socket);
+
+      this.disconnect(socket);
     });
   }
 
@@ -50,14 +52,13 @@ export class Socket {
   }
 
   private emitMessage(socket: socketIO.Socket, messages: string) {
-    const user = this.user.getUser(socket.id)
-    this.io.in(user.room).emit("message", { name: user.name, message: messages });
+    const user = this.user.getUser(socket.id)    
+    this.io.to(user.room).emit("message", { user: user.name, message: messages });
   }
   
   private notifyUser(socket: socketIO.Socket) {
     const user = this.user.getUser(socket.id)
-    console.log(user.name + " se ha conectado a la sala " + user.room + " so.id"+socket.id + " id"+user.id);
-    
+
     socket.in(user.room).emit("notification", {
       title: "Alguien se ha conectado",
       description: `${user.name} ha entrado en la sala`,
@@ -74,15 +75,30 @@ export class Socket {
   
   private logout(socket: socketIO.Socket) {
     socket.on("logout", () => {
-      const user = this.user.getUser(socket.id);
-      this.user.removeUser(socket.id);
-      this.io.in(user.room).emit("notification", {
-        title: "Alguien se ha desconectado",
-        description: `${user.name} ha salido de la sala`,
-      });
-      this.io.in(user.room).emit("users", this.user.getUsersListRoom(user.room));
+      this.disconect(socket);
     });
     
   }
-          
+  private disconnect(socket: socketIO.Socket) {
+    socket.on("disconnect", () => {
+      this.disconect(socket);
+    });
+  }
+  
+  private disconect(socket: socketIO.Socket){
+    const user = this.user.getUser(socket.id);
+    if(user !== undefined){
+
+        this.messages.removeMessage(socket.id);
+        this.user.removeUser(socket.id);
+        this.io.in(user.room).emit("notification", {
+          title: "Alguien se ha desconectado",
+          description: `${user.name} ha salido de la sala`,
+        });
+        this.io.in(user.room).emit("users", this.user.getUsersListRoom(user.room));
+        console.log("Se ha desconectado " + user.name); 
+      } else {
+        console.log("Se ha desconectado un usuario que no existe");
+      }
+  }
 }

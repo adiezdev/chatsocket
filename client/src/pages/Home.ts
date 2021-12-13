@@ -1,8 +1,18 @@
 import { SocketMain } from "../class/socket";
 import { redirect } from "../utils/redirect";
-import { toastErr } from "../components/Toast";
+import { toastErr } from '../components/Toast';
 
 export const Home = (app: any) => {
+  SocketMain.onToastError((err: any) => {
+    const div = document.createElement("div");
+    div.innerHTML = toastErr(err);
+    document.querySelector<HTMLDivElement>("#error")!.appendChild(div);
+    
+    setTimeout(() => {
+      div.remove();
+    }, 1000);
+  });
+
   app.innerHTML = `
       <div class="form flex h-screen">
         <div class="m-auto">
@@ -23,19 +33,7 @@ export const Home = (app: any) => {
 
     if (username && room) {
       SocketMain.emitLogin({ name: username, room: room });
-      const a = `/chat?username=${username}&room=${room}`;
-      window.history.pushState(null, "nextTitle", a);
-      redirect();
-    } else {
-      SocketMain.onToastError((err: any) => {
-        const div = document.createElement("div");
-        div.innerHTML = toastErr(err);
-        document.querySelector<HTMLDivElement>("#error")!.appendChild(div);
-
-        setTimeout(() => {
-          div.remove();
-        }, 1000);
-      });
+      redirect(`/chat`,`?name=${username}&room=${room}`);
     }
   };
 };

@@ -1,8 +1,9 @@
-import { Users } from "./Users";
+import { TUser, Users } from "./Users";
+
 
 type TMessage = {
     id: string;
-    user: string;
+    user: TUser;
     text: string;
 }
 export class Messages {
@@ -21,9 +22,20 @@ export class Messages {
             user: this.user.getUser(id),
             text: text
         });
+        console.log({
+            id: this.messages.length.toString(),
+            user: this.user.getUser(id),
+            text: text
+        });
+        
     }
     public getMessagesUser(user: string): TMessage[] {
-        return this.messages.filter(message => message.user === user);
+        return this.messages.filter(message => message.user.name === user);
     }
-    
+    public removeMessage(id: string): void {
+        this.messages = this.messages.filter(message => message.id !== id);
+    }
+    public removeUserMessage(id: string): any {
+        return this.messages = this.messages.filter(message => message.user.id !== id);
+    }   
 }
